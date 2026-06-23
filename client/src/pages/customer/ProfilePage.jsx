@@ -32,8 +32,7 @@ export default function ProfilePage() {
   });
 
   const passwordMutation = useMutation({
-    // Simulating a change password endpoint since the standard one might require old password
-    mutationFn: (data) => authAPI.updateProfile(data), // Replace with actual endpoint if exists
+    mutationFn: (data) => authAPI.updatePassword(data),
     onSuccess: () => {
       resetPassword();
       toast.success('Password changed successfully!');

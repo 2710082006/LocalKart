@@ -6,33 +6,91 @@ const { asyncHandler, getPagination, uploadMultiple } = require('../utils/helper
 // @route   GET /api/v1/products
 exports.getProducts = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);
-  const { category, minPrice, maxPrice, search, sort, isOrganic, rating, farmerId } = req.query;
+  const {
+    category,
+    minPrice,
+    maxPrice,
+    search,
+    sort,
+    isOrganic,
+    rating,
+    farmerId
+  } = req.query;
 
   let query = { isAvailable: true };
 
-  if (category) query.category = category;
+// If farmer dashboard asks for only his products
+if (req.query.myProducts === 'true' && req.user) {
+  const farmer = await Farmer.findOne({ userId: req.user.id });
+
+  if (farmer) {
+    query.farmerId = farmer._id;
+  }
+}
+
+  // If farmer is logged in, show only his own products
+  if (req.user?.role === "farmer" && !farmerId) {
+    const farmer = await Farmer.findOne({ userId: req.user.id });
+
+    if (!farmer) {
+      return res.status(404).json({
+        success: false,
+        message: "Farmer profile not found"
+      });
+    }
+
+    query.farmerId = farmer._id;
+  }
+
+  // Customer-side filters
   if (farmerId) query.farmerId = farmerId;
-  if (isOrganic === 'true') query.isOrganic = true;
+  if (category) query.category = category;
+  if (isOrganic === "true") query.isOrganic = true;
+
   if (minPrice || maxPrice) {
     query.price = {};
-    if (minPrice) query.price.$gte = parseFloat(minPrice);
-    if (maxPrice) query.price.$lte = parseFloat(maxPrice);
+
+    if (minPrice) {
+      query.price.$gte = parseFloat(minPrice);
+    }
+
+    if (maxPrice) {
+      query.price.$lte = parseFloat(maxPrice);
+    }
   }
-  if (rating) query['rating.average'] = { $gte: parseFloat(rating) };
+
+  if (rating) {
+    query["rating.average"] = {
+      $gte: parseFloat(rating)
+    };
+  }
+
   if (search) {
-    query.$text = { $search: search };
+    query.$text = {
+      $search: search
+    };
   }
 
+  // Sorting
   let sortOption = { createdAt: -1 };
-  if (sort === 'price_asc') sortOption = { price: 1 };
-  else if (sort === 'price_desc') sortOption = { price: -1 };
-  else if (sort === 'rating') sortOption = { 'rating.average': -1 };
-  else if (sort === 'popular') sortOption = { totalSold: -1 };
-  else if (sort === 'newest') sortOption = { createdAt: -1 };
 
+  if (sort === "price_asc") {
+    sortOption = { price: 1 };
+  } else if (sort === "price_desc") {
+    sortOption = { price: -1 };
+  } else if (sort === "rating") {
+    sortOption = { "rating.average": -1 };
+  } else if (sort === "popular") {
+    sortOption = { totalSold: -1 };
+  } else if (sort === "newest") {
+    sortOption = { createdAt: -1 };
+  }
+
+  // Get products
   const total = await Product.countDocuments(query);
+
   const products = await Product.find(query)
-    .populate('farmerId', 'farmName slug location rating')
+    .populate("farmerId", "farmName slug location rating")
     .sort(sortOption)
     .skip(skip)
     .limit(limit);
@@ -46,7 +104,6 @@ exports.getProducts = asyncHandler(async (req, res) => {
     data: products
   });
 });
-
 // @desc    Get nearby products
 // @route   GET /api/v1/products/nearby
 exports.getNearbyProducts = asyncHandler(async (req, res) => {
@@ -124,32 +181,57 @@ exports.getProduct = asyncHandler(async (req, res) => {
 
 // @desc    Create product (farmer only)
 // @route   POST /api/v1/products
-exports.createProduct = asyncHandler(async (req, res) => {
-  const farmer = await Farmer.findOne({ userId: req.user.id });
-  if (!farmer) {
-    return res.status(404).json({ success: false, message: 'Farmer profile not found' });
+exports.createProduct = async (req, res) => {
+  try {
+    const farmer = await Farmer.findOne({ userId: req.user.id });
+
+    if (!farmer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Farmer profile not found'
+      });
+    }
+
+    if (farmer.isApproved !== 'approved') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your farm must be approved before adding products'
+      });
+    }
+
+    console.log("REQ BODY:", req.body);
+    console.log("REQ FILES:", req.files);
+
+    req.body.farmerId = farmer._id;
+
+    // Handle image uploads
+    if (req.files && req.files.length > 0) {
+      const images = await uploadMultiple(req.files, 'farm2door/products');
+      req.body.images = images;
+    }
+
+    const product = await Product.create(req.body);
+
+    // Update farmer product count
+    await Farmer.findByIdAndUpdate(
+      farmer._id,
+      { $inc: { totalProducts: 1 } }
+    );
+
+    res.status(201).json({
+      success: true,
+      data: product
+    });
+
+  } catch (error) {
+    console.error("CREATE PRODUCT ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
-
-  if (farmer.isApproved !== 'approved') {
-    return res.status(403).json({ success: false, message: 'Your farm must be approved before adding products' });
-  }
-
-  req.body.farmerId = farmer._id;
-
-  // Handle image uploads
-  if (req.files && req.files.length > 0) {
-    const images = await uploadMultiple(req.files, 'farm2door/products');
-    req.body.images = images;
-  }
-
-  const product = await Product.create(req.body);
-
-  // Update farmer's product count
-  await Farmer.findByIdAndUpdate(farmer._id, { $inc: { totalProducts: 1 } });
-
-  res.status(201).json({ success: true, data: product });
-});
-
+};
 // @desc    Update product (farmer only)
 // @route   PUT /api/v1/products/:id
 exports.updateProduct = asyncHandler(async (req, res) => {

@@ -32,15 +32,48 @@ export default function CheckoutPage() {
     if (!selectedAddress) { toast.error('Please select a delivery address'); return; }
     setProcessing(true);
     try {
-      const orderData = { addressId: selectedAddress, paymentMethod, items: items.map(i => ({ productId: i.product._id, quantity: i.quantity })) };
-
+      const orderData = {
+        farmerId: items[0].product.farmerId._id || items[0].product.farmerId,
+        deliveryAddress: selectedAddress,
+        paymentMethod: paymentMethod === "online" ? "razorpay" : "cod",
+        items: items.map((i) => ({
+          product: i.product._id,
+          quantity: i.quantity
+        }))
+      };
       if (paymentMethod === 'online') {
-        const { data: paymentOrder } = await paymentAPI.createOrder({ amount: total });
-        // In production, this would open Razorpay checkout
-        toast.success('Payment initiated! (Demo mode)');
-        const { data: order } = await orderAPI.create({ ...orderData, paymentId: paymentOrder.data?.id });
-        dispatch(resetCart());
-        navigate(`/orders/${order.data._id}`);
+        // Step 1: Create actual order in DB first
+        const { data: order } = await orderAPI.create(orderData);
+
+        // Step 2: Create Razorpay order from backend
+        const { data: paymentOrder } = await paymentAPI.createOrder({
+          orderId: order.data._id
+        });
+
+        const options = {
+          key: paymentOrder.data.key,
+          amount: paymentOrder.data.amount,
+          currency: paymentOrder.data.currency,
+          order_id: paymentOrder.data.orderId,
+
+          name: "Farm2Door",
+          description: "Farm Fresh Order",
+
+          handler: async function (response) {
+            await paymentAPI.verify(response);
+
+            toast.success("Payment successful!");
+            dispatch(resetCart());
+            navigate(`/orders/${order.data._id}`);
+          },
+
+          theme: {
+            color: "#0EA5E9"
+          }
+        };
+
+        const razorpay = new window.Razorpay(options);
+        razorpay.open();
       } else {
         const { data: order } = await orderAPI.create(orderData);
         dispatch(resetCart());

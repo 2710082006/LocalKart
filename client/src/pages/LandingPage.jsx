@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from 'framer-motion';
-import CountUp from 'react-countup';
 import { useInView as useInViewHook } from 'react-intersection-observer';
 import {
   ArrowRight, ChevronDown, Star, MapPin, Truck, Shield, Clock,
@@ -172,7 +171,7 @@ function HeroSection() {
 
 // =============== HOW IT WORKS ===============
 function HowItWorksSection() {
-  const [ref, inView] = useInViewHook({ triggerOnce: true, threshold: 0.2 });
+  const { ref, inView } = useInViewHook({ triggerOnce: true, threshold: 0.2 });
 
   const steps = [
     { icon: MapPin, title: 'Discover Nearby', desc: 'Find local farmers within 10km of your location', color: 'from-sky-500 to-sky-600' },
@@ -234,7 +233,7 @@ function HowItWorksSection() {
 
 // =============== WHY FARM2DOOR ===============
 function WhySection() {
-  const [ref, inView] = useInViewHook({ triggerOnce: true, threshold: 0.2 });
+  const { ref, inView } = useInViewHook({ triggerOnce: true, threshold: 0.2 });
 
   const features = [
     { icon: Leaf, title: 'Farm Fresh Guarantee', desc: 'Every product comes directly from the farm. No middlemen, no warehouses.', color: 'bg-emerald-50 text-emerald-600' },
@@ -289,41 +288,52 @@ function WhySection() {
 
 // =============== STATS SECTION ===============
 function StatsSection() {
-  const [ref, inView] = useInViewHook({ triggerOnce: true, threshold: 0.3 });
+  const { ref, inView } = useInViewHook({
+    triggerOnce: true,
+    threshold: 0.3,
+  });
 
   const stats = [
-    { value: 2500, suffix: '+', label: 'Local Farmers' },
-    { value: 50000, suffix: '+', label: 'Happy Customers' },
-    { value: 15000, suffix: '+', label: 'Products Available' },
-    { value: 98, suffix: '%', label: 'Satisfaction Rate' },
+    { value: 2500, suffix: "+", label: "Local Farmers" },
+    { value: 50000, suffix: "+", label: "Happy Customers" },
+    { value: 15000, suffix: "+", label: "Products Available" },
+    { value: 98, suffix: "%", label: "Satisfaction Rate" },
   ];
 
   return (
-    <section className="py-20 bg-gradient-to-br from-sky-600 via-sky-700 to-sky-800 relative overflow-hidden" id="stats" ref={ref}>
-      {/* Decorative elements */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-10 left-10 w-72 h-72 rounded-full bg-white blur-3xl" />
-        <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-emerald-400 blur-3xl" />
+    <section
+      ref={ref}
+      id="stats"
+      className="py-20 bg-gradient-to-br from-sky-600 via-sky-700 to-sky-800 relative overflow-hidden"
+    >
+      {/* Background blobs */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div className="absolute top-10 left-10 w-72 h-72 rounded-full bg-white blur-3xl"></div>
+        <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-emerald-400 blur-3xl"></div>
       </div>
 
-      <div className="container relative">
+      <div className="container relative mx-auto px-4">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-          {stats.map((stat, i) => (
+          {stats.map((stat, index) => (
             <motion.div
-              key={i}
+              key={index}
               initial={{ opacity: 0, y: 30 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
+              animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+              transition={{
+                duration: 0.6,
+                delay: index * 0.15,
+              }}
               className="text-center"
             >
-              <div className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-2 font-[family-name:var(--font-display)]">
-                {inView ? (
-                  <CountUp end={stat.value} duration={2.5} separator="," suffix={stat.suffix} />
-                ) : (
-                  `0${stat.suffix}`
-                )}
+              <div className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-2">
+                {inView
+                  ? `${stat.value.toLocaleString()}${stat.suffix}`
+                  : `0${stat.suffix}`}
               </div>
-              <p className="text-sky-200 font-medium text-sm sm:text-base">{stat.label}</p>
+
+              <p className="text-sky-200 font-medium text-sm sm:text-base">
+                {stat.label}
+              </p>
             </motion.div>
           ))}
         </div>
@@ -331,10 +341,9 @@ function StatsSection() {
     </section>
   );
 }
-
 // =============== TESTIMONIALS ===============
 function TestimonialsSection() {
-  const [ref, inView] = useInViewHook({ triggerOnce: true, threshold: 0.2 });
+  const { ref, inView } = useInViewHook({ triggerOnce: true, threshold: 0.2 });
 
   const testimonials = [
     { name: 'Priya Sharma', role: 'Customer, Delhi', text: 'The freshest vegetables I\'ve ever had delivered to my door. The tomatoes taste like they were just picked!', rating: 5, avatar: 'PS' },
@@ -396,7 +405,7 @@ function TestimonialsSection() {
 
 // =============== FAQ SECTION ===============
 function FAQSection() {
-  const [ref, inView] = useInViewHook({ triggerOnce: true, threshold: 0.2 });
+  const { ref, inView } = useInViewHook({ triggerOnce: true, threshold: 0.2 });
   const [open, setOpen] = useState(null);
 
   const faqs = [
@@ -467,7 +476,7 @@ function FAQSection() {
 
 // =============== CTA SECTION ===============
 function CTASection() {
-  const [ref, inView] = useInViewHook({ triggerOnce: true, threshold: 0.3 });
+  const { ref, inView } = useInViewHook({ triggerOnce: true, threshold: 0.3 });
 
   return (
     <section className="py-20 bg-neutral-950 relative overflow-hidden" id="cta" ref={ref}>
@@ -502,7 +511,7 @@ function CTASection() {
 
 // =============== CATEGORIES SECTION ===============
 function CategoriesSection() {
-  const [ref, inView] = useInViewHook({ triggerOnce: true, threshold: 0.2 });
+  const { ref, inView } = useInViewHook({ triggerOnce: true, threshold: 0.2 });
 
   const categories = [
     { name: 'Vegetables', emoji: '🥬', color: 'from-emerald-400 to-emerald-600', count: '2,500+' },
@@ -555,7 +564,7 @@ function CategoriesSection() {
 
 // =============== FEATURED FARMERS CAROUSEL ===============
 function FeaturedFarmersSection() {
-  const [ref, inView] = useInViewHook({ triggerOnce: true, threshold: 0.2 });
+  const { ref, inView } = useInViewHook({ triggerOnce: true, threshold: 0.2 });
   const [current, setCurrent] = useState(0);
 
   const farmers = [
@@ -636,7 +645,7 @@ function FeaturedFarmersSection() {
 
 // =============== DELIVERY PROCESS ===============
 function DeliveryProcessSection() {
-  const [ref, inView] = useInViewHook({ triggerOnce: true, threshold: 0.2 });
+  const { ref, inView } = useInViewHook({ triggerOnce: true, threshold: 0.2 });
 
   const stages = [
     { icon: '🧑‍🌾', label: 'Farmer Harvests', desc: 'Your order triggers fresh harvest', time: '0 min' },

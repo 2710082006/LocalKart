@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Star, Leaf, MapPin, TrendingUp, GripVertical, CheckCircle } from 'lucide-react';
-import { adminAPI } from '../../api';
+import { adminAPI, farmerAPI } from '../../api';
 import toast from 'react-hot-toast';
 
 export default function FeaturedFarmersPage() {
@@ -9,10 +9,7 @@ export default function FeaturedFarmersPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['adminFeaturedFarmers'],
-    // In a real app we might fetch all farmers and sort them locally, or just fetch featured ones.
-    // For this, let's reuse getPendingFarmers or an admin getAllFarmers endpoint.
-    // We'll simulate by filtering a list if a specific endpoint isn't available.
-    queryFn: () => adminAPI.getPendingFarmers().then(r => r.data), // Fallback: adminAPI should ideally have a method for featured
+    queryFn: () => farmerAPI.getAll().then(r => r.data),
   });
 
   const featureMutation = useMutation({

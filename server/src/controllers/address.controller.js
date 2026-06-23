@@ -1,5 +1,6 @@
 const Address = require('../models/Address');
 const { asyncHandler } = require('../utils/helpers');
+const axios = require("axios");
 
 // @desc    Get user addresses
 // @route   GET /api/v1/addresses
@@ -13,14 +14,53 @@ exports.getAddresses = asyncHandler(async (req, res) => {
 exports.createAddress = asyncHandler(async (req, res) => {
   req.body.userId = req.user.id;
 
-  // If this is the first address, make it default
-  const count = await Address.countDocuments({ userId: req.user.id });
+  const { street, city, state, pincode } = req.body;
+
+  // Build full address
+  const fullAddress = `${street}, ${city}, ${state}, ${pincode}`;
+
+  // Geocode with Google Maps
+  const geoRes = await axios.get(
+    "https://maps.googleapis.com/maps/api/geocode/json",
+    {
+      params: {
+        address: fullAddress,
+        key: process.env.GOOGLE_MAPS_API_KEY,
+      },
+    }
+  );
+
+  let location = {
+    type: "Point",
+    coordinates: [0, 0],
+  };
+
+  if (geoRes.data.results.length > 0) {
+    const { lat, lng } = geoRes.data.results[0].geometry.location;
+
+    location = {
+      type: "Point",
+      coordinates: [lng, lat],
+    };
+  }
+
+  req.body.location = location;
+
+  // First address = default
+  const count = await Address.countDocuments({
+    userId: req.user.id,
+  });
+
   if (count === 0) {
     req.body.isDefault = true;
   }
 
   const address = await Address.create(req.body);
-  res.status(201).json({ success: true, data: address });
+
+  res.status(201).json({
+    success: true,
+    data: address,
+  });
 });
 
 // @desc    Update address

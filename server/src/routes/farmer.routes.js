@@ -1,22 +1,77 @@
 const express = require('express');
 const router = express.Router();
+
 const {
-  getFarmers, getFarmer, getNearbyFarmers, getFeaturedFarmers,
-  getFarmerProducts, updateFarmerProfile, getDashboard, getAnalytics
+  getFarmers,
+  getFarmer,
+  getNearbyFarmers,
+  getFeaturedFarmers,
+  getFarmerProducts,
+  updateFarmerProfile,
+  getDashboard,
+  getAnalytics,
+  updatePaymentDetails
 } = require('../controllers/farmer.controller');
+
 const { protect, authorize } = require('../middleware/auth');
 const { validate, schemas } = require('../middleware/validate');
 
-// Protected farmer-only routes (must come before /:id)
-router.put('/profile', protect, authorize('farmer'), validate(schemas.farmerProfile), updateFarmerProfile);
-router.get('/me/dashboard', protect, authorize('farmer'), getDashboard);
-router.get('/me/analytics', protect, authorize('farmer'), getAnalytics);
 
+// =============================
+// Protected farmer routes
+// =============================
+
+// Update farmer profile
+router.put(
+  '/profile',
+  protect,
+  authorize('farmer'),
+  validate(schemas.farmerProfile),
+  updateFarmerProfile
+);
+
+// Update payment details
+router.put(
+  '/payment-details',
+  protect,
+  authorize('farmer'),
+  updatePaymentDetails
+);
+
+// Farmer dashboard
+router.get(
+  '/me/dashboard',
+  protect,
+  authorize('farmer'),
+  getDashboard
+);
+
+// Farmer analytics
+router.get(
+  '/me/analytics',
+  protect,
+  authorize('farmer'),
+  getAnalytics
+);
+
+
+// =============================
 // Public routes
-router.get('/', getFarmers);
+// =============================
+
+// Nearby farmers
 router.get('/nearby', getNearbyFarmers);
+
+// Featured farmers
 router.get('/featured', getFeaturedFarmers);
-router.get('/:id', getFarmer);
+
+// Get all farmers
+router.get('/', getFarmers);
+
+// IMPORTANT: specific route before generic route
 router.get('/:id/products', getFarmerProducts);
+
+// Get single farmer (keep LAST)
+router.get('/:id', getFarmer);
 
 module.exports = router;

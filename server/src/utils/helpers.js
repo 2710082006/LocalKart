@@ -47,23 +47,30 @@ exports.uploadMultiple = async (files, folder = 'farm2door') => {
 
 // Send email (simulated for dev)
 exports.sendEmail = async ({ to, subject, html }) => {
-  if (process.env.NODE_ENV === 'production' && process.env.SMTP_EMAIL) {
-    const nodemailer = require('nodemailer');
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT,
-      auth: {
-        user: process.env.SMTP_EMAIL,
-        pass: process.env.SMTP_PASSWORD
-      }
-    });
+  if (process.env.SMTP_EMAIL) {
+    try {
+      const nodemailer = require("nodemailer");
 
-    await transporter.sendMail({
-      from: `Farm2Door <${process.env.SMTP_EMAIL}>`,
-      to,
-      subject,
-      html
-    });
+      const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT,
+        auth: {
+          user: process.env.SMTP_EMAIL,
+          pass: process.env.SMTP_PASSWORD,
+        },
+      });
+
+      await transporter.sendMail({
+        from: `Farm2Door <${process.env.SMTP_EMAIL}>`,
+        to,
+        subject,
+        html,
+      });
+
+      console.log(`✅ Email sent to ${to}`);
+    } catch (error) {
+      console.log("MAIL ERROR:", error.message);
+    }
   } else {
     console.log(`📧 [DEV] Email to ${to}: ${subject}`);
   }

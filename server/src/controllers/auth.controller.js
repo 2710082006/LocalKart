@@ -42,7 +42,12 @@ exports.register = asyncHandler(async (req, res) => {
     await DeliveryAgent.create({ userId: user._id });
   }
 
-  sendTokenResponse(user, 201, res, otp);
+  res.status(201).json({
+  success: true,
+  message: 'OTP sent to email. Please verify.',
+  userId: user._id,
+  email: user.email
+});
 });
 
 // @desc    Login user
@@ -89,7 +94,7 @@ exports.verifyOTP = asyncHandler(async (req, res) => {
   user.otp = undefined;
   await user.save();
 
-  res.json({ success: true, message: 'Email verified successfully' });
+  sendTokenResponse(user, 200, res);
 });
 
 // @desc    Forgot password
@@ -176,6 +181,23 @@ exports.updateProfile = asyncHandler(async (req, res) => {
   });
 
   res.json({ success: true, data: user });
+});
+
+// @desc    Update password
+// @route   PUT /api/v1/auth/update-password
+exports.updatePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  
+  const user = await User.findById(req.user.id).select('+password');
+  if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+  
+  const isMatch = await user.matchPassword(currentPassword);
+  if (!isMatch) return res.status(401).json({ success: false, message: 'Incorrect current password' });
+  
+  user.password = newPassword;
+  await user.save();
+  
+  sendTokenResponse(user, 200, res);
 });
 
 // @desc    Logout

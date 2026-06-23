@@ -25,3 +25,6 @@ process.on('uncaughtException', (err) => {
   console.error(`❌ Uncaught Exception: ${err.message}`);
   process.exit(1);
 });
+
+console.log("Razorpay Key:", process.env.RAZORPAY_KEY_ID);
+console.log("Razorpay Secret:", process.env.RAZORPAY_KEY_SECRET ? "FOUND" : "MISSING");
