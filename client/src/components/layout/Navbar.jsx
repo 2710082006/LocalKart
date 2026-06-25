@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Heart, Bell, Menu, X, Search, User, LogOut, ChevronDown, Leaf } from 'lucide-react';
+import { ShoppingCart, Heart, Bell, Menu, X, Search, User, LogOut, Leaf } from 'lucide-react';
 import { logout } from '../../features/authSlice';
 import { toggleMobileMenu, setMobileMenuOpen } from '../../features/uiSlice';
 
@@ -25,7 +25,7 @@ export default function Navbar() {
 
   useEffect(() => {
     dispatch(setMobileMenuOpen(false));
-    setProfileOpen(false);
+    //setProfileOpen(false);
   }, [location, dispatch]);
 
   const handleLogout = () => {
