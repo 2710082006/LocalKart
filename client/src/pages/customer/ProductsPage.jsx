@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Search, SlidersHorizontal, Star, ShoppingCart, Heart, X, ChevronDown } from 'lucide-react';
+import { Search, SlidersHorizontal, Star, ChevronDown } from 'lucide-react';
 import { productAPI } from '../../api';
 
 const categories = ['All', 'vegetables', 'fruits', 'grains', 'pulses', 'dairy', 'spices', 'herbs', 'nuts', 'honey', 'oils', 'organic', 'millets', 'seeds'];
@@ -56,29 +56,53 @@ export default function ProductsPage() {
         {/* Search & Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <form onSubmit={handleSearch} className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
-            <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="input pl-12 pr-4" placeholder="Search products..." id="search-products" />
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="w-5 h-5 text-neutral-400" />
+            </div>
+            <input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 text-base border border-neutral-200 rounded-2xl bg-white text-neutral-900 placeholder-neutral-400 outline-none transition-all duration-200 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 shadow-sm hover:border-neutral-300"
+              placeholder="Search products..."
+              id="search-products"
+            />
           </form>
           <div className="flex gap-3">
-            <select value={sort} onChange={(e) => updateParam('sort', e.target.value)} className="input !w-auto !pr-10 appearance-none" id="sort-products">
-              {sortOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-            <button onClick={() => setShowFilters(!showFilters)} className={`btn-secondary !px-4 ${showFilters ? '!bg-sky-50 !border-sky-300' : ''}`} id="toggle-filters">
+            <div className="relative flex-1 sm:flex-initial">
+              <select
+                value={sort}
+                onChange={(e) => updateParam('sort', e.target.value)}
+                className="w-full sm:w-auto px-4 py-3 pr-10 text-base border border-neutral-200 rounded-2xl bg-white text-neutral-800 outline-none transition-all duration-200 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 shadow-sm hover:border-neutral-300 appearance-none cursor-pointer font-medium"
+                id="sort-products"
+              >
+                {sortOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-neutral-500">
+                <ChevronDown className="w-4 h-4" />
+              </div>
+            </div>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center justify-center p-3 border border-neutral-200 rounded-2xl bg-white text-neutral-700 outline-none transition-all duration-200 hover:bg-neutral-50 hover:border-neutral-300 focus:ring-4 focus:ring-sky-500/10 shadow-sm cursor-pointer ${
+                showFilters ? 'bg-sky-50 border-sky-300 text-sky-600' : ''
+              }`}
+              id="toggle-filters"
+            >
               <SlidersHorizontal className="w-5 h-5" />
             </button>
           </div>
         </div>
 
         {/* Categories */}
-        <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide">
+        <div className="flex flex-wrap gap-2 md:gap-3 mb-8">
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => updateParam('category', cat === 'All' ? '' : cat)}
-              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+              className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
                 (cat === 'All' && !category) || category === cat
-                  ? 'bg-sky-500 text-white shadow-md'
-                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                  ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20 scale-[1.02]'
+                  : 'bg-neutral-100 text-neutral-600 hover:bg-sky-50 hover:text-sky-600 hover:border-sky-200 border border-transparent'
               }`}
               id={`cat-${cat}`}
             >
@@ -102,11 +126,13 @@ export default function ProductsPage() {
             ))}
           </div>
         ) : products.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-6xl mb-4">🔍</p>
-            <h3 className="text-xl font-bold text-neutral-800 mb-2">No products found</h3>
-            <p className="text-neutral-500 mb-6">Try adjusting your search or filters</p>
-            <button onClick={() => { setSearchParams({}); setSearchTerm(''); }} className="btn-primary">Clear Filters</button>
+          <div className="flex flex-col items-center justify-center py-20 px-6 bg-neutral-50 rounded-3xl border border-dashed border-neutral-200 max-w-md mx-auto text-center mt-12 shadow-sm">
+            <div className="w-16 h-16 bg-sky-50 text-sky-500 rounded-full flex items-center justify-center mb-6">
+              <Search className="w-8 h-8" />
+            </div>
+            <h3 className="text-2xl font-bold text-neutral-900 mb-2 font-[family-name:var(--font-display)]">No products found</h3>
+            <p className="text-neutral-500 text-sm max-w-xs mb-8 leading-relaxed">Try adjusting your search terms or clearing the filters to discover more products.</p>
+            <button onClick={() => { setSearchParams({}); setSearchTerm(''); }} className="btn-primary !px-8 !py-3.5 !rounded-2xl shadow-lg shadow-sky-500/20 hover:shadow-sky-500/30 transition-all duration-300">Clear Filters</button>
           </div>
         ) : (
           <>

@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Package, ShoppingBag, BarChart3, User, Truck,
   Clock, Users, Shield, AlertTriangle, Star, LogOut, Menu, X,
-  ChevronLeft, Bell, Leaf, Settings, MapPin, Navigation, DollarSign,
+  ChevronLeft, Bell, Leaf, Settings, MapPin,  DollarSign,
   MessageSquare
 } from 'lucide-react';
 import { logout } from '../../features/authSlice';
@@ -61,7 +61,7 @@ export default function DashboardLayout({ role }) {
   const roleLabels = { customer: 'Customer Panel', farmer: 'Farmer Panel', delivery: 'Delivery Panel', admin: 'Admin Panel' };
 
   return (
-    <div className="flex h-screen bg-neutral-50">
+    <div className="flex min-h-screen bg-neutral-50">
       {/* Sidebar - Desktop */}
       <aside className={`hidden lg:flex flex-col bg-white border-r border-neutral-200 transition-all duration-300 ${collapsed ? 'w-20' : 'w-64'}`}>
         {/* Logo */}
@@ -174,7 +174,7 @@ export default function DashboardLayout({ role }) {
       )}
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col ">
         {/* Top bar */}
         <header className="h-16 bg-white border-b border-neutral-200 flex items-center justify-between px-4 lg:px-8 flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -197,7 +197,7 @@ export default function DashboardLayout({ role }) {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-8">
+        <main className="flex-1 p-4 lg:p-8">
           <Outlet />
         </main>
       </div>

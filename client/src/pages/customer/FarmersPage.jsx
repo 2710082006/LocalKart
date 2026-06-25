@@ -75,12 +75,13 @@ export default function FarmersPage() {
 
         {/* Search */}
         <form onSubmit={handleSearch} className="relative mb-8 max-w-lg">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
-
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="w-5 h-5 text-neutral-400" />
+          </div>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="input pl-12"
+            className="w-full pl-12 pr-4 py-3 text-base border border-neutral-200 rounded-2xl bg-white text-neutral-900 placeholder-neutral-400 outline-none transition-all duration-200 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 shadow-sm hover:border-neutral-300"
             placeholder="Search farmers by name or location..."
             id="search-farmers"
           />
@@ -101,14 +102,12 @@ export default function FarmersPage() {
             ))}
           </div>
         ) : farmers.length === 0 ? (
-          <div className="text-center py-20">
-            <Leaf className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-neutral-800 mb-2">
-              No farmers found
-            </h3>
-            <p className="text-neutral-500">
-              Try adjusting your search or location
-            </p>
+          <div className="flex flex-col items-center justify-center py-20 px-6 bg-neutral-50 rounded-3xl border border-dashed border-neutral-200 max-w-md mx-auto text-center mt-12 shadow-sm">
+            <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-6">
+              <Leaf className="w-8 h-8" />
+            </div>
+            <h3 className="text-2xl font-bold text-neutral-900 mb-2 font-[family-name:var(--font-display)]">No farmers found</h3>
+            <p className="text-neutral-500 text-sm max-w-xs mb-6 leading-relaxed">Try adjusting your search or location to find farmers near you.</p>
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -81,16 +81,12 @@ useEffect(() => {
   });
 
   const onSubmit = async (formData) => {
-  let coordinates = editingId
-    ? addresses.find((a) => a._id === editingId)?.location?.coordinates
-    : null;
-
-  // Temporary hardcoded city mapping (replace later with geocoding API)
-  if (formData.city.toLowerCase().includes("delhi")) {
-    coordinates = [77.2441075, 28.5692718];
-  } else if (formData.city.toLowerCase().includes("lucknow")) {
-    coordinates = [80.97876500000001, 26.866395];
-  }
+  const coordinates =
+  formData.city.toLowerCase().includes("delhi")
+    ? [77.2441075, 28.5692718]
+    : formData.city.toLowerCase().includes("lucknow")
+    ? [80.97876500000001, 26.866395]
+    : [80.9462, 26.8467];
 
   const payload = {
     ...formData,
@@ -101,6 +97,10 @@ useEffect(() => {
     },
   };
 
+  console.log("FORM DATA:", formData);
+console.log("COORDINATES:", coordinates);
+console.log("PAYLOAD:", payload);
+console.log("IS ARRAY:", Array.isArray(payload.location.coordinates));
   if (editingId) {
     updateMutation.mutate({
       id: editingId,

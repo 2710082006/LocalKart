@@ -198,9 +198,10 @@ function HowItWorksSection() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 relative">
+        {/* Desktop Layout */}
+        <div className="hidden md:grid grid-cols-4 gap-8 lg:gap-12 relative">
           {/* Connecting line */}
-          <div className="hidden lg:block absolute top-16 left-[12%] right-[12%] h-0.5 bg-gradient-to-r from-sky-200 via-emerald-200 via-amber-200 to-rose-200" />
+          <div className="absolute top-10 left-[12%] right-[12%] h-[2px] bg-neutral-100 z-0" />
 
           {steps.map((step, i) => {
             const Icon = step.icon;
@@ -210,18 +211,59 @@ function HowItWorksSection() {
                 initial={{ opacity: 0, y: 40 }}
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.6, delay: i * 0.15 }}
-                className="relative text-center group"
+                className="relative flex flex-col items-center text-center group z-10"
               >
-                <div className="relative mx-auto mb-6">
-                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center mx-auto shadow-lg group-hover:shadow-xl group-hover:-translate-y-2 transition-all duration-300`}>
-                    <Icon className="w-7 h-7 text-white" />
+                {/* Icon Card & Number Badge */}
+                <div className="relative">
+                  <div className={`w-20 h-20 rounded-2xl bg-white border border-neutral-100 shadow-md flex items-center justify-center group-hover:shadow-lg group-hover:-translate-y-1.5 transition-all duration-300`}>
+                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${step.color} flex items-center justify-center`}>
+                      <Icon className="w-6 h-6 text-white" />
+                    </div>
                   </div>
-                  <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-neutral-900 text-white text-xs font-bold flex items-center justify-center">
+                  <div className="absolute -top-2.5 -right-2.5 w-7 h-7 rounded-full bg-neutral-900 text-white text-xs font-bold flex items-center justify-center border-2 border-white shadow-sm">
                     {i + 1}
                   </div>
                 </div>
-                <h3 className="text-lg font-bold text-neutral-900 mb-2">{step.title}</h3>
-                <p className="text-sm text-neutral-500 leading-relaxed">{step.desc}</p>
+
+                {/* Step Title & Description */}
+                <h3 className="text-lg font-bold text-neutral-900 mt-6 mb-2">{step.title}</h3>
+                <p className="text-sm text-neutral-500 leading-relaxed max-w-[200px]">{step.desc}</p>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Mobile Layout (Vertical Timeline) */}
+        <div className="md:hidden relative pl-8 ml-4 border-l border-neutral-200/80 space-y-12">
+          {steps.map((step, i) => {
+            const Icon = step.icon;
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -20 }}
+                animate={inView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.5, delay: i * 0.15 }}
+                className="relative flex flex-col items-start text-left group"
+              >
+                {/* Timeline badge/dot */}
+                <div className="absolute -left-[49px] top-2 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-neutral-900 text-white font-bold text-xs flex items-center justify-center border-2 border-white shadow-md">
+                    {i + 1}
+                  </div>
+                </div>
+
+                {/* Icon Card & Header */}
+                <div className="flex items-center gap-4 mb-3">
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${step.color} flex items-center justify-center shadow-md`}>
+                    <Icon className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-neutral-900">{step.title}</h3>
+                </div>
+
+                {/* Description */}
+                <p className="text-sm text-neutral-500 leading-relaxed max-w-sm">
+                  {step.desc}
+                </p>
               </motion.div>
             );
           })}
@@ -413,7 +455,7 @@ function FAQSection() {
     { q: 'Is the produce really organic?', a: 'Yes! All farmers on our platform are verified, and organic-certified products are clearly labeled. We conduct regular quality checks to ensure standards are maintained.' },
     { q: 'How do I become a seller on Farm2Door?', a: 'Simply sign up as a farmer, complete your profile with farm details and KYC documents, and wait for admin approval. Once approved, you can start listing your products immediately.' },
     { q: 'What areas do you deliver to?', a: 'We currently serve major cities across India. Delivery is available within a 10-50km radius of each farmer. Enter your location to see available farmers near you.' },
-    { q: 'What if I\'m not satisfied with my order?', a: 'We have a hassle-free return policy. If you\'re not satisfied with the quality of any product, file a complaint and we\'ll arrange a refund or replacement within 24 hours.' },
+    { q: "What if I'm not satisfied with my order?", a: "We have a hassle-free return policy. If you're not satisfied with the quality of any product, file a complaint and we'll arrange a refund or replacement within 24 hours." },
     { q: 'How are farmers paid?', a: 'Farmers receive 90% of the product price directly to their bank account after order delivery. Payments are processed weekly with complete transparency.' },
   ];
 
@@ -429,27 +471,27 @@ function FAQSection() {
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900 mb-4">
             Got <span className="gradient-text">Questions?</span>
           </h2>
-          <p className="text-lg text-neutral-500">
+          <p className="text-lg text-neutral-500 max-w-xl mx-auto">
             We've got answers. If you can't find what you're looking for, reach out to us.
           </p>
         </motion.div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {faqs.map((faq, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 20 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: i * 0.08 }}
-              className="card-flat overflow-hidden"
+              className="bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:border-neutral-300 transition-all duration-300"
             >
               <button
                 onClick={() => setOpen(open === i ? null : i)}
-                className="w-full flex items-center justify-between p-5 text-left hover:bg-neutral-50 transition-colors"
+                className="w-full flex items-start justify-between gap-4 p-6 text-left"
                 id={`faq-${i}`}
               >
-                <span className="font-semibold text-neutral-900 pr-4">{faq.q}</span>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${open === i ? 'bg-sky-100 text-sky-600 rotate-180' : 'bg-neutral-100 text-neutral-500'}`}>
+                <span className="font-semibold text-base md:text-lg text-neutral-900 leading-snug mt-0.5">{faq.q}</span>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${open === i ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
                   {open === i ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                 </div>
               </button>
@@ -459,10 +501,12 @@ function FAQSection() {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
                     className="overflow-hidden"
                   >
-                    <p className="px-5 pb-5 text-neutral-500 text-sm leading-relaxed">{faq.a}</p>
+                    <div className="border-t border-neutral-100 px-6 pt-4 pb-6">
+                      <p className="text-neutral-600 text-sm md:text-base leading-relaxed">{faq.a}</p>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -479,9 +523,11 @@ function CTASection() {
   const { ref, inView } = useInViewHook({ triggerOnce: true, threshold: 0.3 });
 
   return (
-    <section className="py-20 bg-neutral-950 relative overflow-hidden" id="cta" ref={ref}>
-      <div className="absolute inset-0">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-sky-600/20 blur-[120px]" />
+    <section className="py-28 md:py-36 bg-neutral-950 relative overflow-hidden" id="cta" ref={ref}>
+      {/* Glow effects */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-sky-600/15 blur-[140px]" />
+        <div className="absolute bottom-0 left-1/4 w-[300px] h-[300px] rounded-full bg-emerald-600/10 blur-[100px]" />
       </div>
       <div className="container relative text-center">
         <motion.div
@@ -489,17 +535,21 @@ function CTASection() {
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-white/70 text-sm font-medium mb-8">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            Join 50,000+ happy customers
+          </span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-8 leading-tight">
             Ready to Taste the <span className="gradient-text-dark">Difference?</span>
           </h2>
-          <p className="text-lg text-neutral-400 max-w-2xl mx-auto mb-10">
+          <p className="text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto mb-12 leading-relaxed">
             Join thousands of happy customers who've made the switch to farm-fresh, locally sourced produce.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <Link to="/signup" className="btn-primary !py-4 !px-10 !text-lg !rounded-2xl" id="cta-signup">
+          <div className="flex flex-wrap items-center justify-center gap-6">
+            <Link to="/signup" className="btn-primary !py-4 !px-12 !text-lg !rounded-2xl shadow-2xl shadow-sky-500/20 hover:shadow-sky-500/30" id="cta-signup">
               Start Shopping <ArrowRight className="w-5 h-5" />
             </Link>
-            <Link to="/signup?role=farmer" className="btn-secondary !py-4 !px-10 !text-lg !rounded-2xl !bg-white/5 !text-white !border-white/20 hover:!bg-white/10" id="cta-farmer">
+            <Link to="/signup?role=farmer" className="inline-flex items-center gap-2 py-4 px-12 text-lg font-semibold rounded-2xl bg-white/5 text-white border border-white/15 hover:bg-white/10 hover:border-white/30 transition-all duration-300" id="cta-farmer">
               Join as Farmer
             </Link>
           </div>

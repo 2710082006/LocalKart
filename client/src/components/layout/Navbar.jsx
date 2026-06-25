@@ -65,16 +65,16 @@ export default function Navbar() {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-1">
+            <div className="hidden lg:flex items-center gap-4">
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
                   id={`nav-${link.label.toLowerCase()}`}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
                     location.pathname === link.path
                       ? 'text-sky-600 bg-sky-50'
-                      : `${textColor} hover:bg-white/10 ${scrolled || !isHome ? 'hover:bg-neutral-50' : ''}`
+                      : `${textColor} hover:bg-white/10 ${scrolled || !isHome ? 'hover:bg-neutral-50 text-neutral-800' : ''}`
                   }`}
                 >
                   {link.label}
@@ -83,39 +83,38 @@ export default function Navbar() {
             </div>
 
             {/* Desktop Actions */}
-            <div className="hidden lg:flex items-center gap-2">
-              <button className={`p-2.5 rounded-xl transition-all ${textColor} hover:bg-white/10 ${scrolled || !isHome ? 'hover:bg-neutral-100' : ''}`} id="nav-search">
+            <div className="hidden lg:flex items-center gap-3">
+              <button className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer ${textColor} hover:bg-white/10 ${scrolled || !isHome ? 'hover:bg-neutral-100 text-neutral-800' : ''}`} id="nav-search">
                 <Search className="w-5 h-5" />
               </button>
 
               {isAuthenticated ? (
                 <>
-                  <Link to="/wishlist" className={`p-2.5 rounded-xl transition-all relative ${textColor} hover:bg-white/10 ${scrolled || !isHome ? 'hover:bg-neutral-100' : ''}`} id="nav-wishlist">
+                  <Link to="/wishlist" className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 relative cursor-pointer ${textColor} hover:bg-white/10 ${scrolled || !isHome ? 'hover:bg-neutral-100 text-neutral-800' : ''}`} id="nav-wishlist">
                     <Heart className="w-5 h-5" />
                   </Link>
-                  <Link to="/cart" className={`p-2.5 rounded-xl transition-all relative ${textColor} hover:bg-white/10 ${scrolled || !isHome ? 'hover:bg-neutral-100' : ''}`} id="nav-cart">
+                  <Link to="/cart" className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 relative cursor-pointer ${textColor} hover:bg-white/10 ${scrolled || !isHome ? 'hover:bg-neutral-100 text-neutral-800' : ''}`} id="nav-cart">
                     <ShoppingCart className="w-5 h-5" />
                     {cartCount > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-sky-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-sky-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
                         {cartCount}
                       </span>
                     )}
                   </Link>
-                  <Link to={getDashboardLink()} className={`p-2.5 rounded-xl transition-all ${textColor} hover:bg-white/10 ${scrolled || !isHome ? 'hover:bg-neutral-100' : ''}`} id="nav-notifications">
+                  <Link to={getDashboardLink()} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer ${textColor} hover:bg-white/10 ${scrolled || !isHome ? 'hover:bg-neutral-100 text-neutral-800' : ''}`} id="nav-notifications">
                     <Bell className="w-5 h-5" />
                   </Link>
 
                   {/* Profile dropdown */}
-                  <div className="relative ml-2">
+                  <div className="relative">
                     <button
                       onClick={() => setProfileOpen(!profileOpen)}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all ${textColor} hover:bg-white/10 ${scrolled || !isHome ? 'hover:bg-neutral-100' : ''}`}
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer ${textColor} hover:bg-white/10 ${scrolled || !isHome ? 'hover:bg-neutral-100 text-neutral-800' : ''}`}
                       id="nav-profile-toggle"
                     >
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center text-white text-sm font-semibold">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center text-white text-xs font-bold border-2 border-transparent hover:border-white transition-all shadow-sm">
                         {user?.name?.charAt(0)?.toUpperCase()}
                       </div>
-                      <ChevronDown className={`w-4 h-4 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     <AnimatePresence>

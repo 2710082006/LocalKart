@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import {
   login,
-  logout,
+ 
   getMe,
   clearError,
 } from "../../features/authSlice";
@@ -67,12 +67,7 @@ export default function LoginPage() {
     }
   };
 
-  // logout helper (use this wherever logout button exists)
-  const handleLogout = async () => {
-    queryClient.clear(); // clear all cached farmer/customer data
-    await dispatch(logout());
-    navigate("/login");
-  };
+ 
 
   return (
     <div className="min-h-screen flex" id="login-page">

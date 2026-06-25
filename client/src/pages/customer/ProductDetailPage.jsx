@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link,useNavigate  } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
@@ -11,6 +11,8 @@ import toast from 'react-hot-toast';
 export default function ProductDetailPage() {
   const { id } = useParams();
   const dispatch = useDispatch();
+const navigate = useNavigate();
+
   const [qty, setQty] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
@@ -24,7 +26,20 @@ export default function ProductDetailPage() {
     dispatch(addToCart({ productId: product._id, quantity: qty }));
     toast.success(`${product.name} added to cart!`);
   };
+const handleBuyNow = async () => {
+  try {
+    await dispatch(
+      addToCart({
+        productId: product._id,
+        quantity: qty,
+      })
+    ).unwrap();
 
+    navigate('/checkout'); // ya '/cart'
+  } catch (err) {
+    toast.error(err || 'Failed to proceed');
+  }
+};
   const handleWishlist = async () => {
     try {
       await wishlistAPI.add(product._id);
@@ -124,9 +139,24 @@ export default function ProductDetailPage() {
                   <span className="w-12 text-center font-semibold">{qty}</span>
                   <button onClick={() => setQty(Math.min(product.stock, qty + 1))} className="p-3 hover:bg-neutral-50"><Plus className="w-4 h-4" /></button>
                 </div>
-                <button onClick={handleAddToCart} className="btn-primary flex-1 !py-3.5" id="add-to-cart">
-                  <ShoppingCart className="w-5 h-5" /> Add to Cart
-                </button>
+                
+<div className="flex gap-3 flex-1">
+  <button
+    onClick={handleAddToCart}
+    className="btn-outline flex-1 !py-3.5"
+  >
+    <ShoppingCart className="w-5 h-5" />
+    Add to Cart
+  </button>
+
+  <button
+    onClick={handleBuyNow}
+    className="btn-primary flex-1 !py-3.5"
+  >
+    Buy Now
+  </button>
+</div>
+
                 <button onClick={handleWishlist} className="p-3.5 rounded-xl border border-neutral-200 hover:bg-red-50 hover:border-red-200 transition-colors" id="add-to-wishlist">
                   <Heart className="w-5 h-5 text-neutral-400 hover:text-red-500" />
                 </button>
