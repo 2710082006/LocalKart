@@ -57,49 +57,26 @@ exports.uploadMultiple = async (files, folder = "farm2door") => {
 };
 
 // Send email
+const { Resend } = require("resend");
+
 exports.sendEmail = async ({ to, subject, html }) => {
-  if (process.env.SMTP_EMAIL) {
-    try {
-      const nodemailer = require("nodemailer");
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
-      const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT),
-  secure: false,
-  auth: {
-    user: process.env.SMTP_EMAIL,
-    pass: process.env.SMTP_PASSWORD
-  },
-  tls: {
-    rejectUnauthorized: false
-  },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 10000
-});
+    const data = await resend.emails.send({
+      from: "onboarding@resend.dev",
+      to,
+      subject,
+      html
+    });
 
-      await transporter.verify();
-      console.log("✅ SMTP server connected");
-
-      await transporter.sendMail({
-        from: `Farm2Door <${process.env.SMTP_EMAIL}>`,
-        to,
-        subject,
-        html,
-      });
-
-      console.log(`✅ Email sent to ${to}`);
-    } catch (error) {
-      console.error("❌ MAIL ERROR FULL:", error);
-      throw error;
-    }
-  } else {
-    console.log(`📧 [DEV MODE] Email to ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`HTML: ${html}`);
+    console.log("Email sent:", data);
+    return data;
+  } catch (error) {
+    console.error("MAIL ERROR FULL:", error);
+    throw error;
   }
 };
-
 // Generate invoice number
 exports.generateInvoiceNumber = () => {
   const prefix = "F2D-INV";
