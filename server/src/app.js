@@ -29,7 +29,7 @@ const cartRoutes = require("./routes/cart.routes");
 const complaintRoutes = require("./routes/complaint.routes");
 
 const app = express();
-
+app.set('trust proxy', 1);
 /*
 =================================
 CORS
