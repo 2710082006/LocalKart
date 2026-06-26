@@ -10,9 +10,13 @@ exports.register = asyncHandler(async (req, res) => {
   const { name, email, password, phone, role } = req.body;
 
   // Check if user exists
-  const existingUser = await User.findOne({ email });
+  const existingUser = await User.findOne({ email, role });
+
   if (existingUser) {
-    return res.status(400).json({ success: false, message: 'Email already registered' });
+    return res.status(400).json({
+      success: false,
+      message: `${role} already registered with this email`
+    });
   }
 
   let user;
