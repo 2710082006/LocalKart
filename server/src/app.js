@@ -37,30 +37,14 @@ CORS
 */
 app.use(
   cors({
-    origin: [
-  "http://localhost:5173",
-  "http://localhost:5174",
-  "https://localkart-sepia.vercel.app",
-  "https://localkart-9g4zmmqpa-divyam-portfolio.vercel.app"
-],
+    origin: true,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
 
-app.options(
-  "*",
-  cors({
-    origin: [
-  "http://localhost:5173",
-  "http://localhost:5174",
-  "https://localkart-sepia.vercel.app",
-  "https://localkart-9g4zmmqpa-divyam-portfolio.vercel.app"
-],
-    credentials: true
-  })
-);
+app.options("*", cors());
 /*
 =================================
 BODY PARSERS
