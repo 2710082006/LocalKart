@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import MainLayout from './components/layout/MainLayout';
 import DashboardLayout from './components/layout/DashboardLayout';
 import ProtectedRoute from './routes/ProtectedRoute';
+import CustomerOrPublicRoute from './routes/CustomerOrPublicRoute';
 import LoadingScreen from './components/common/LoadingScreen';
 
 // Lazy-loaded pages
@@ -46,6 +47,8 @@ const DeliveryRoutePage = lazy(() => import('./pages/delivery/DeliveryRoutePage'
 const DeliveryStatusPage = lazy(() => import('./pages/delivery/DeliveryStatusPage'));
 const DeliveryHistory = lazy(() => import('./pages/delivery/HistoryPage'));
 const DeliveryEarnings = lazy(() => import('./pages/delivery/EarningsPage'));
+const DeliveryProfile = lazy(() => import('./pages/delivery/ProfilePage'));
+const AvailableOrdersPage = lazy(() => import('./pages/delivery/AvailableOrdersPage'));
 
 // Admin pages
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
@@ -54,6 +57,7 @@ const AdminFarmers = lazy(() => import('./pages/admin/FarmersPage'));
 const AdminFeaturedFarmers = lazy(() => import('./pages/admin/FeaturedFarmersPage'));
 const AdminComplaints = lazy(() => import('./pages/admin/ComplaintsPage'));
 const AdminAnalytics = lazy(() => import('./pages/admin/AnalyticsPage'));
+const AdminOrders = lazy(() => import('./pages/admin/OrdersPage'));
 
 export default function App() {
   return (
@@ -65,8 +69,10 @@ export default function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/products/:id" element={<ProductDetailPage />} />
-            <Route path="/farmers" element={<FarmersPage />} />
-            <Route path="/farmers/:id" element={<FarmerDetailPage />} />
+            <Route element={<CustomerOrPublicRoute />}>
+              <Route path="/farmers" element={<FarmersPage />} />
+              <Route path="/farmers/:id" element={<FarmerDetailPage />} />
+            </Route>
           </Route>
 
           {/* Auth routes (no layout) */}
@@ -117,6 +123,8 @@ export default function App() {
               <Route path="/delivery/status/:id" element={<DeliveryStatusPage />} />
               <Route path="/delivery/earnings" element={<DeliveryEarnings />} />
               <Route path="/delivery/history" element={<DeliveryHistory />} />
+              <Route path="/delivery/profile" element={<DeliveryProfile />} />
+              <Route path="/delivery/available" element={<AvailableOrdersPage />} />
             </Route>
           </Route>
 
@@ -129,6 +137,7 @@ export default function App() {
               <Route path="/admin/featured" element={<AdminFeaturedFarmers />} />
               <Route path="/admin/complaints" element={<AdminComplaints />} />
               <Route path="/admin/analytics" element={<AdminAnalytics />} />
+              <Route path="/admin/orders" element={<AdminOrders />} />
             </Route>
           </Route>
 

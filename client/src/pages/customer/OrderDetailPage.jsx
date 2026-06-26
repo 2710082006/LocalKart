@@ -112,6 +112,24 @@ export default function OrderDetailPage() {
               <p className="text-sm text-neutral-600 capitalize">{order.paymentMethod?.replace(/_/g, ' ')}</p>
               <p className={`text-sm font-medium mt-1 ${order.paymentStatus === 'paid' ? 'text-emerald-600' : 'text-amber-600'}`}>{order.paymentStatus}</p>
             </div>
+            {order.deliveryAgentId && (
+              <div className="card p-6">
+                <h3 className="font-bold text-neutral-900 mb-4 flex items-center gap-2"><Truck className="w-5 h-5 text-sky-500" /> Delivery Agent</h3>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-neutral-100 overflow-hidden flex items-center justify-center">
+                    {order.deliveryAgentId.userId?.avatar?.url ? (
+                      <img src={order.deliveryAgentId.userId.avatar.url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <Truck className="w-5 h-5 text-neutral-400" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-neutral-800">{order.deliveryAgentId.userId?.name || 'Assigned Agent'}</p>
+                    <p className="text-xs text-neutral-500">{order.deliveryAgentId.userId?.phone || 'Phone pending'} • {order.deliveryAgentId.vehicleNumber}</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

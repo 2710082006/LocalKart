@@ -10,7 +10,7 @@ export default function FarmersPage() {
   const { data, isLoading } = useQuery({ queryKey: ['pendingFarmers'], queryFn: () => adminAPI.getPendingFarmers().then(r => r.data) });
 
   const approveMutation = useMutation({
-    mutationFn: ({ id, approved }) => adminAPI.approveFarmer(id, { approved }),
+    mutationFn: ({ id, approved }) => adminAPI.approveFarmer(id, { status: approved ? 'approved' : 'rejected' }),
     onSuccess: () => { queryClient.invalidateQueries(['pendingFarmers']); toast.success('Updated!'); },
     onError: (err) => toast.error(err.response?.data?.message || 'Failed'),
   });
@@ -64,11 +64,11 @@ export default function FarmersPage() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-2 sm:items-center flex-shrink-0">
-                  <span className={`badge ${farmer.isApproved ? 'badge-green' : farmer.isApproved === false ? 'badge-red' : 'badge-amber'}`}>
-                    {farmer.isApproved ? 'Approved' : farmer.isApproved === false ? 'Rejected' : 'Pending'}
+                  <span className={`badge ${farmer.isApproved === 'approved' ? 'badge-green' : farmer.isApproved === 'rejected' ? 'badge-red' : 'badge-amber'}`}>
+                    {farmer.isApproved === 'approved' ? 'Approved' : farmer.isApproved === 'rejected' ? 'Rejected' : 'Pending'}
                   </span>
                   <div className="flex gap-2">
-                    {!farmer.isApproved && (
+                    {farmer.isApproved === 'pending' && (
                       <>
                         <button onClick={() => approveMutation.mutate({ id: farmer._id, approved: true })} className="btn-primary !py-2 !px-4 !text-sm">
                           <CheckCircle className="w-4 h-4" /> Approve

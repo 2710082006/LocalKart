@@ -4,12 +4,21 @@ const Farmer = require('../models/Farmer');
 const Address = require('../models/Address');
 const Notification = require('../models/Notification');
 const Transaction = require('../models/Transaction');
+const User = require('../models/User');
 const { asyncHandler, getPagination, generateInvoiceNumber } = require('../utils/helpers');
 
 // @desc    Create order
 // @route   POST /api/v1/orders
 exports.createOrder = asyncHandler(async (req, res) => {
   const { farmerId, items, deliveryAddress, paymentMethod, deliverySlot, notes } = req.body;
+
+  // Block Razorpay orders from this endpoint — they must go through payment verification flow
+  if (paymentMethod === 'razorpay') {
+    return res.status(400).json({
+      success: false,
+      message: 'Razorpay orders must be created through the payment verification flow (POST /api/v1/payments/verify)'
+    });
+  }
 
   // Validate farmer
   const farmer = await Farmer.findById(farmerId);
@@ -47,15 +56,29 @@ exports.createOrder = asyncHandler(async (req, res) => {
       quantity: item.quantity,
       unit: product.unit
     });
-
-    // Reduce stock
-    product.stock -= item.quantity;
-    product.totalSold += item.quantity;
-    await product.save();
   }
 
-  const deliveryFee = subtotal >= (farmer.minimumOrder || 200) ? 0 : 30;
+  const deliveryFee = subtotal >= (farmer.minimumOrder ?? 200) ? 0 : 30;
   const totalAmount = subtotal + deliveryFee;
+
+  // Deduct stock atomically before creating order
+  const deductedProducts = [];
+  for (const item of orderItems) {
+    const updated = await Product.findOneAndUpdate(
+      { _id: item.product, stock: { $gte: item.quantity } },
+      { $inc: { stock: -item.quantity, totalSold: item.quantity } }
+    );
+    if (!updated) {
+      // Rollback
+      for (const d of deductedProducts) {
+        await Product.findByIdAndUpdate(d.product, {
+          $inc: { stock: d.quantity, totalSold: -d.quantity }
+        });
+      }
+      return res.status(400).json({ success: false, message: `Stock exhausted for product ${item.name} during checkout.` });
+    }
+    deductedProducts.push(item);
+  }
 
   const order = await Order.create({
     customerId: req.user.id,
@@ -82,6 +105,9 @@ exports.createOrder = asyncHandler(async (req, res) => {
     invoice: { number: generateInvoiceNumber() },
     estimatedDelivery: new Date(Date.now() + 2 * 60 * 60 * 1000) // 2 hours
   });
+
+  // Clear user cart
+  await User.findByIdAndUpdate(req.user.id, { cart: [] });
 
   // Update farmer stats
   await Farmer.findByIdAndUpdate(farmerId, {
@@ -134,6 +160,10 @@ exports.getOrders = asyncHandler(async (req, res) => {
       select: 'farmName slug',
       populate: { path: 'userId', select: 'name phone' }
     })
+    .populate({
+      path: 'deliveryAgentId',
+      populate: { path: 'userId', select: 'name phone avatar' }
+    })
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
@@ -158,7 +188,10 @@ exports.getOrder = asyncHandler(async (req, res) => {
       select: 'farmName slug location',
       populate: { path: 'userId', select: 'name phone' }
     })
-    .populate('deliveryAgentId');
+    .populate({
+      path: 'deliveryAgentId',
+      populate: { path: 'userId', select: 'name phone avatar' }
+    });
 
   if (!order) {
     return res.status(404).json({ success: false, message: 'Order not found' });
@@ -175,6 +208,13 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
 
   if (!order) {
     return res.status(404).json({ success: false, message: 'Order not found' });
+  }
+
+  if (req.user.role === 'farmer') {
+    const farmer = await Farmer.findOne({ userId: req.user.id });
+    if (!farmer || order.farmerId.toString() !== farmer._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized to update this order' });
+    }
   }
 
   const validTransitions = {

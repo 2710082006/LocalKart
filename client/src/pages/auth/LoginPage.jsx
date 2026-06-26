@@ -63,7 +63,12 @@ export default function LoginPage() {
 
       navigate(from !== "/" ? from : dashMap[role] || "/dashboard");
     } else {
-      toast.error(result.payload || "Login failed");
+      if (result.payload?.needsVerification) {
+        toast.error(result.payload.message);
+        navigate("/verify-otp", { state: { email: result.payload.email } });
+      } else {
+        toast.error(result.payload?.message || result.payload || "Login failed");
+      }
     }
   };
 

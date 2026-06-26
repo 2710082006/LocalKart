@@ -1,11 +1,13 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* ==============================
    Farm2Door Design System
    Theme: Sky Blue / White / Black
    ============================== */
 
-@theme {
+:root {
   /* Sky Blue Palette */
   --color-sky-50: #f0f9ff;
   --color-sky-100: #e0f2fe;

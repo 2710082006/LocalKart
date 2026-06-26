@@ -43,7 +43,22 @@ if (req.query.myProducts === 'true' && req.user) {
   }
 
   // Customer-side filters
-  if (farmerId) query.farmerId = farmerId;
+  if (farmerId) {
+    query.farmerId = farmerId;
+  } else if (req.query.lng && req.query.lat) {
+    const nearbyFarmers = await Farmer.find({
+      location: {
+        $near: {
+          $geometry: { type: 'Point', coordinates: [parseFloat(req.query.lng), parseFloat(req.query.lat)] },
+          $maxDistance: 10000 // 10km radius
+        }
+      },
+      isApproved: 'approved',
+      isActive: true
+    }).select('_id');
+    query.farmerId = { $in: nearbyFarmers.map(f => f._id) };
+  }
+
   if (category) query.category = category;
   if (isOrganic === "true") query.isOrganic = true;
 
@@ -276,6 +291,17 @@ exports.deleteProduct = asyncHandler(async (req, res) => {
 
   await product.deleteOne();
   await Farmer.findByIdAndUpdate(farmer._id, { $inc: { totalProducts: -1 } });
+
+  // Clean up references from user wishlists and carts
+  const User = require('../models/User');
+  await User.updateMany(
+    { wishlist: product._id },
+    { $pull: { wishlist: product._id } }
+  );
+  await User.updateMany(
+    { 'cart.product': product._id },
+    { $pull: { cart: { product: product._id } } }
+  );
 
   res.json({ success: true, message: 'Product deleted' });
 });

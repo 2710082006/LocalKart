@@ -130,7 +130,7 @@ exports.toggleUserStatus = asyncHandler(async (req, res) => {
 // @desc    Get pending farmer approvals
 // @route   GET /api/v1/admin/farmers/pending
 exports.getPendingFarmers = asyncHandler(async (req, res) => {
-  const farmers = await Farmer.find({ isApproved: 'pending' })
+  const farmers = await Farmer.find({})
     .populate('userId', 'name email phone avatar createdAt')
     .sort({ createdAt: -1 });
 

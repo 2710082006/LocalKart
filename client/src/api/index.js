@@ -152,6 +152,8 @@ export const deliveryAPI = {
   toggleAvailability: () => api.put('/delivery/availability'),
   updateProfile: (data) => api.put('/delivery/profile', data),
   assign: (orderId, data) => api.put(`/delivery/assign/${orderId}`, data),
+  getAvailableOrders: (params) => api.get('/delivery/available-orders', { params }),
+  acceptOrder: (id) => api.put(`/delivery/orders/${id}/accept`),
 };
 
 // ============ Admin API ============

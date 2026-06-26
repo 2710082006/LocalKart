@@ -126,6 +126,7 @@ orderSchema.index({ farmerId: 1, createdAt: -1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ orderNumber: 1 });
 orderSchema.index({ deliveryAgentId: 1 });
+orderSchema.index({ 'deliveryAddress.location': '2dsphere' });
 
 // Generate order number before save
 orderSchema.pre('save', async function(next) {

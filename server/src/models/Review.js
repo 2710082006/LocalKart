@@ -73,6 +73,12 @@ reviewSchema.statics.calcAverageRating = async function(productId) {
       'rating.average': Math.round(result[0].avgRating * 10) / 10,
       'rating.count': result[0].count
     });
+  } else {
+    // No reviews left — reset to 0
+    await Product.findByIdAndUpdate(productId, {
+      'rating.average': 0,
+      'rating.count': 0
+    });
   }
 };
 
@@ -88,6 +94,12 @@ reviewSchema.statics.calcFarmerRating = async function(farmerId) {
     await Farmer.findByIdAndUpdate(farmerId, {
       'rating.average': Math.round(result[0].avgRating * 10) / 10,
       'rating.count': result[0].count
+    });
+  } else {
+    // No reviews left — reset to 0
+    await Farmer.findByIdAndUpdate(farmerId, {
+      'rating.average': 0,
+      'rating.count': 0
     });
   }
 };

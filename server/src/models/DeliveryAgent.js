@@ -22,6 +22,12 @@ const deliveryAgentSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  address: {
+    street: String,
+    city: String,
+    state: String,
+    pincode: String
+  },
   currentLocation: {
     type: {
       type: String,

@@ -14,9 +14,9 @@ export default function AssignedOrdersPage() {
   });
 
   const activeAssignments = data?.data?.activeAssignments || [];
-  // For demo, we treat packed/confirmed as pending pickup, and out_for_delivery as active
-  const pendingPickup = activeAssignments.filter(o => o.status === 'packed' || o.status === 'confirmed');
-  const activeDelivery = activeAssignments.filter(o => o.status === 'out_for_delivery');
+  // For demo, we treat placed/confirmed as pending pickup, and packed/out_for_delivery as active
+  const pendingPickup = activeAssignments.filter(o => o.status === 'placed' || o.status === 'confirmed');
+  const activeDelivery = activeAssignments.filter(o => o.status === 'packed' || o.status === 'out_for_delivery');
 
   const orders = filter === 'active' ? activeDelivery : pendingPickup;
 

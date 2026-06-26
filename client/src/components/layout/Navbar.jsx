@@ -40,8 +40,11 @@ export default function Navbar() {
 
   const navLinks = [
     { label: 'Products', path: '/products' },
-    { label: 'Farmers', path: '/farmers' },
   ];
+
+  if (!isAuthenticated || user?.role === 'customer') {
+    navLinks.push({ label: 'Farmers', path: '/farmers' });
+  }
 
   const navBg = scrolled || !isHome
     ? 'bg-white/90 backdrop-blur-xl shadow-sm border-b border-neutral-100'

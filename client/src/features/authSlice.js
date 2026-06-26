@@ -2,7 +2,17 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { authAPI } from "../api";
 
 // Load user from localStorage
-const savedUser = JSON.parse(localStorage.getItem("farm2door_user") || "null");
+let savedUser = null;
+
+try {
+  const rawUser = localStorage.getItem("farm2door_user");
+  if (rawUser && rawUser !== "undefined") {
+    savedUser = JSON.parse(rawUser);
+  }
+} catch (error) {
+  console.error("Corrupted localStorage user data");
+  localStorage.removeItem("farm2door_user");
+}
 const savedToken = localStorage.getItem("farm2door_token");
 
 // LOGIN
@@ -18,7 +28,7 @@ export const login = createAsyncThunk(
       return data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || "Login failed"
+        error.response?.data || { message: "Login failed" }
       );
     }
   }
@@ -30,10 +40,6 @@ export const register = createAsyncThunk(
   async (userData, { rejectWithValue }) => {
     try {
       const { data } = await authAPI.register(userData);
-
-      localStorage.setItem("farm2door_token", data.token);
-      localStorage.setItem("farm2door_user", JSON.stringify(data.data));
-
       return data;
     } catch (error) {
       return rejectWithValue(
@@ -126,9 +132,7 @@ const authSlice = createSlice({
 
       .addCase(register.fulfilled, (state, action) => {
         state.loading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload.data;
-        state.token = action.payload.token;
+        // User is not authenticated until they verify OTP and login
       })
 
       .addCase(register.rejected, (state, action) => {

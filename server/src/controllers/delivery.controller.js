@@ -2,6 +2,7 @@ const DeliveryAgent = require('../models/DeliveryAgent');
 const Order = require('../models/Order');
 const Notification = require('../models/Notification');
 const { asyncHandler, getPagination } = require('../utils/helpers');
+const axios = require('axios');
 
 // @desc    Get delivery agent dashboard
 // @route   GET /api/v1/delivery/dashboard
@@ -14,10 +15,10 @@ exports.getDashboard = asyncHandler(async (req, res) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const [activeDeliveries, todayDeliveries, totalDelivered] = await Promise.all([
+  const [activeAssignments, todayDeliveries, totalDelivered] = await Promise.all([
     Order.find({
       deliveryAgentId: agent._id,
-      status: { $in: ['packed', 'out_for_delivery'] }
+      status: { $in: ['placed', 'confirmed', 'packed', 'out_for_delivery'] }
     })
       .populate('customerId', 'name phone')
       .populate('farmerId', 'farmName location')
@@ -35,14 +36,8 @@ exports.getDashboard = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     data: {
-      agent: {
-        isAvailable: agent.isAvailable,
-        rating: agent.rating,
-        completedDeliveries: agent.completedDeliveries,
-        totalEarnings: agent.totalEarnings,
-        vehicleType: agent.vehicleType
-      },
-      activeDeliveries,
+      agent: agent.toObject(),
+      activeAssignments,
       todayDeliveries,
       totalDelivered
     }
@@ -64,7 +59,7 @@ exports.getAssignments = asyncHandler(async (req, res) => {
   if (status) {
     query.status = status;
   } else {
-    query.status = { $in: ['packed', 'out_for_delivery'] };
+    query.status = { $in: ['placed', 'confirmed', 'packed', 'out_for_delivery'] };
   }
 
   const total = await Order.countDocuments(query);
@@ -235,12 +230,36 @@ exports.updateProfile = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: 'Delivery agent profile not found' });
   }
 
-  const allowedFields = ['vehicleType', 'vehicleNumber', 'licenseNumber', 'zone', 'bankDetails'];
+  const allowedFields = ['vehicleType', 'vehicleNumber', 'licenseNumber', 'zone', 'bankDetails', 'address'];
   allowedFields.forEach(field => {
     if (req.body[field] !== undefined) {
       agent[field] = req.body[field];
     }
   });
+
+  if (req.body.address && req.body.address.street && req.body.address.city && req.body.address.state && req.body.address.pincode) {
+    const { street, city, state, pincode } = req.body.address;
+    const fullAddress = `${street}, ${city}, ${state}, ${pincode}`;
+    
+    try {
+      const geoRes = await axios.get("https://maps.googleapis.com/maps/api/geocode/json", {
+        params: {
+          address: fullAddress,
+          key: process.env.GOOGLE_MAPS_API_KEY
+        }
+      });
+
+      if (geoRes.data.results.length > 0) {
+        const { lat, lng } = geoRes.data.results[0].geometry.location;
+        agent.currentLocation = {
+          type: 'Point',
+          coordinates: [lng, lat]
+        };
+      }
+    } catch (error) {
+      console.error('Geocoding error:', error);
+    }
+  }
 
   await agent.save();
 
@@ -302,11 +321,11 @@ exports.assignDelivery = asyncHandler(async (req, res) => {
   if (agentId) {
     agent = await DeliveryAgent.findById(agentId);
   } else {
-    // Auto-assign nearest available agent
+    // Auto-assign nearest available agent (with fewer than 5 assigned orders)
     agent = await DeliveryAgent.findOne({
       isAvailable: true,
       isActive: true,
-      assignedOrders: { $size: { $lt: 5 } }
+      'assignedOrders.4': { $exists: false } // Array length < 5
     });
 
     if (!agent) {
@@ -330,6 +349,112 @@ exports.assignDelivery = asyncHandler(async (req, res) => {
     type: 'delivery',
     title: 'New Delivery Assignment',
     message: `You have been assigned order #${order.orderNumber}`,
+    data: { orderId: order._id }
+  });
+
+  res.json({ success: true, data: order });
+});
+
+// @desc    Get available orders nearby
+// @route   GET /api/v1/delivery/available-orders
+exports.getAvailableOrders = asyncHandler(async (req, res) => {
+  const agent = await DeliveryAgent.findOne({ userId: req.user.id });
+  if (!agent) {
+    return res.status(404).json({ success: false, message: 'Delivery agent profile not found' });
+  }
+
+  if (!agent.currentLocation || agent.currentLocation.coordinates[0] === 0) {
+    return res.status(400).json({ success: false, message: 'Please update your address profile to view nearby orders' });
+  }
+
+  const { page, limit, skip } = getPagination(req.query);
+
+  const query = {
+    deliveryAgentId: null,
+    status: { $in: ['placed', 'confirmed', 'packed'] },
+    'deliveryAddress.location': {
+      $geoWithin: {
+        $centerSphere: [
+          [agent.currentLocation.coordinates[0], agent.currentLocation.coordinates[1]],
+          10 / 6378.1 // 10km radius in radians
+        ]
+      }
+    }
+  };
+
+  const total = await Order.countDocuments(query);
+  const orders = await Order.find(query)
+    .populate('customerId', 'name phone avatar')
+    .populate({
+      path: 'farmerId',
+      select: 'farmName location userId',
+      populate: { path: 'userId', select: 'name phone' }
+    })
+    .sort({ createdAt: 1 })
+    .skip(skip)
+    .limit(limit);
+
+  res.json({
+    success: true,
+    count: orders.length,
+    total,
+    pages: Math.ceil(total / limit),
+    currentPage: page,
+    data: orders
+  });
+});
+
+// @desc    Accept an available order
+// @route   PUT /api/v1/delivery/orders/:id/accept
+exports.acceptOrder = asyncHandler(async (req, res) => {
+  const agent = await DeliveryAgent.findOne({ userId: req.user.id });
+  if (!agent) {
+    return res.status(404).json({ success: false, message: 'Delivery agent profile not found' });
+  }
+
+  if (!agent.isActive || !agent.isAvailable) {
+    return res.status(400).json({ success: false, message: 'You must be active and available to accept orders' });
+  }
+
+  const order = await Order.findOneAndUpdate(
+    {
+      _id: req.params.id,
+      deliveryAgentId: null,
+      status: { $in: ['placed', 'confirmed', 'packed'] },
+      'deliveryAddress.location': {
+        $geoWithin: {
+          $centerSphere: [
+            [agent.currentLocation.coordinates[0], agent.currentLocation.coordinates[1]],
+            10 / 6378.1
+          ]
+        }
+      }
+    },
+    { deliveryAgentId: agent._id },
+    { new: true }
+  );
+
+  if (!order) {
+    return res.status(400).json({ success: false, message: 'Order is no longer available or does not exist' });
+  }
+
+  agent.assignedOrders.push(order._id);
+  await agent.save();
+
+  order.timeline.push({
+    status: order.status,
+    message: 'Delivery agent assigned',
+    timestamp: new Date(),
+    updatedBy: req.user.id
+  });
+  await order.save();
+
+  // Notify customer
+  await Notification.create({
+    userId: order.customerId,
+    type: 'delivery',
+    title: 'Delivery Agent Assigned',
+    message: `A delivery agent has been assigned to your order #${order.orderNumber}`,
     data: { orderId: order._id }
   });
 

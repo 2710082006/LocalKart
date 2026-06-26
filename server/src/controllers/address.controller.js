@@ -20,31 +20,36 @@ exports.createAddress = asyncHandler(async (req, res) => {
   const fullAddress = `${street}, ${city}, ${state}, ${pincode}`;
 
   // Geocode with Google Maps
-  const geoRes = await axios.get(
-    "https://maps.googleapis.com/maps/api/geocode/json",
-    {
-      params: {
-        address: fullAddress,
-        key: process.env.GOOGLE_MAPS_API_KEY,
-      },
+  try {
+    const geoRes = await axios.get(
+      "https://maps.googleapis.com/maps/api/geocode/json",
+      {
+        params: {
+          address: fullAddress,
+          key: process.env.GOOGLE_MAPS_API_KEY,
+        },
+      }
+    );
+
+    if (geoRes.data.results && geoRes.data.results.length > 0) {
+      const { lat, lng } = geoRes.data.results[0].geometry.location;
+      req.body.location = {
+        type: "Point",
+        coordinates: [lng, lat],
+      };
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'Could not geocode this address. Please check street, city, state and pincode.'
+      });
     }
-  );
-
-  let location = {
-    type: "Point",
-    coordinates: [0, 0],
-  };
-
-  if (geoRes.data.results.length > 0) {
-    const { lat, lng } = geoRes.data.results[0].geometry.location;
-
-    location = {
-      type: "Point",
-      coordinates: [lng, lat],
-    };
+  } catch (geoError) {
+    console.error('Geocoding failed:', geoError.message);
+    return res.status(400).json({
+      success: false,
+      message: 'Address geocoding failed. Please verify your address details.'
+    });
   }
-
-  req.body.location = location;
 
   // First address = default
   const count = await Address.countDocuments({
@@ -74,6 +79,52 @@ exports.updateAddress = asyncHandler(async (req, res) => {
 
   if (address.userId.toString() !== req.user.id) {
     return res.status(403).json({ success: false, message: 'Not authorized' });
+  }
+
+  // Re-geocode if any address field changed
+  const addressFieldsChanged =
+    (req.body.street && req.body.street !== address.street) ||
+    (req.body.city && req.body.city !== address.city) ||
+    (req.body.state && req.body.state !== address.state) ||
+    (req.body.pincode && req.body.pincode !== address.pincode);
+
+  if (addressFieldsChanged) {
+    const street = req.body.street || address.street;
+    const city = req.body.city || address.city;
+    const state = req.body.state || address.state;
+    const pincode = req.body.pincode || address.pincode;
+    const fullAddress = `${street}, ${city}, ${state}, ${pincode}`;
+
+    try {
+      const geoRes = await axios.get(
+        "https://maps.googleapis.com/maps/api/geocode/json",
+        {
+          params: {
+            address: fullAddress,
+            key: process.env.GOOGLE_MAPS_API_KEY,
+          },
+        }
+      );
+
+      if (geoRes.data.results && geoRes.data.results.length > 0) {
+        const { lat, lng } = geoRes.data.results[0].geometry.location;
+        req.body.location = {
+          type: "Point",
+          coordinates: [lng, lat],
+        };
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: 'Could not geocode the updated address. Please check your address details.'
+        });
+      }
+    } catch (geoError) {
+      console.error('Geocoding failed on update:', geoError.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Address geocoding failed. Please verify your address details.'
+      });
+    }
   }
 
   address = await Address.findByIdAndUpdate(req.params.id, req.body, {

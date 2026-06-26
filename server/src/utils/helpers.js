@@ -2,8 +2,13 @@ const cloudinary = require('../config/cloudinary');
 
 // Upload image to Cloudinary from buffer
 exports.uploadToCloudinary = async (fileBuffer, folder = 'farm2door') => {
+  const placeholder = {
+    public_id: `placeholder_${Date.now()}`,
+    url: `https://placehold.co/400x400/0EA5E9/FFFFFF?text=Farm2Door`
+  };
+
   try {
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {
           folder,
@@ -23,10 +28,7 @@ exports.uploadToCloudinary = async (fileBuffer, folder = 'farm2door') => {
   } catch (error) {
     // Fallback for development without Cloudinary
     console.warn('Cloudinary upload failed, using placeholder:', error.message);
-    return {
-      public_id: `placeholder_${Date.now()}`,
-      url: `https://placehold.co/400x400/0EA5E9/FFFFFF?text=Farm2Door`
-    };
+    return placeholder;
   }
 };
 

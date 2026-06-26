@@ -41,7 +41,8 @@ exports.getCart = asyncHandler(async (req, res) => {
 // @desc    Add to cart
 // @route   POST /api/v1/cart
 exports.addToCart = asyncHandler(async (req, res) => {
-  const { productId, quantity = 1 } = req.body;
+  const { productId } = req.body;
+  const quantity = parseInt(req.body.quantity || 1, 10);
 
   const product = await Product.findById(productId);
   if (!product) {
@@ -80,7 +81,7 @@ exports.addToCart = asyncHandler(async (req, res) => {
 // @desc    Update cart item quantity
 // @route   PUT /api/v1/cart/:productId
 exports.updateCartItem = asyncHandler(async (req, res) => {
-  const { quantity } = req.body;
+  const quantity = parseInt(req.body.quantity, 10);
 
   if (!quantity || quantity < 1) {
     return res.status(400).json({ success: false, message: 'Quantity must be at least 1' });

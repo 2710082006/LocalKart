@@ -28,18 +28,28 @@ exports.register = asyncHandler(async (req, res) => {
     html: `<h2>Your OTP is: ${otp}</h2><p>Valid for 10 minutes.</p>`
   });
 
-  // If farmer, create farmer profile
+  // If farmer, create farmer profile (rollback user if this fails)
   if (role === 'farmer') {
-    await Farmer.create({
-      userId: user._id,
-      farmName: `${name}'s Farm`,
-      location: { type: 'Point', coordinates: [77.5946, 12.9716] } // Default Bangalore
-    });
+    try {
+      await Farmer.create({
+        userId: user._id,
+        farmName: `${name}'s Farm`,
+        location: { type: 'Point', coordinates: [77.5946, 12.9716] } // Default Bangalore
+      });
+    } catch (profileError) {
+      await User.findByIdAndDelete(user._id);
+      return res.status(500).json({ success: false, message: 'Failed to create farmer profile. Please try again.' });
+    }
   }
 
-  // If delivery agent, create profile
+  // If delivery agent, create profile (rollback user if this fails)
   if (role === 'delivery') {
-    await DeliveryAgent.create({ userId: user._id });
+    try {
+      await DeliveryAgent.create({ userId: user._id });
+    } catch (profileError) {
+      await User.findByIdAndDelete(user._id);
+      return res.status(500).json({ success: false, message: 'Failed to create delivery profile. Please try again.' });
+    }
   }
 
   res.status(201).json({
@@ -55,6 +65,24 @@ exports.register = asyncHandler(async (req, res) => {
 exports.login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
+  // Admin login check using .env credentials
+  if (
+    email === process.env.ADMIN_EMAIL &&
+    password === process.env.ADMIN_PASSWORD
+  ) {
+    let adminUser = await User.findOne({ email });
+    if (!adminUser) {
+      adminUser = await User.create({
+        name: 'Admin',
+        email,
+        password,
+        role: 'admin',
+        isVerified: true,
+      });
+    }
+    return sendTokenResponse(adminUser, 200, res);
+  }
+
   const user = await User.findOne({ email }).select('+password');
   if (!user) {
     return res.status(401).json({ success: false, message: 'Invalid credentials' });
@@ -67,6 +95,16 @@ exports.login = asyncHandler(async (req, res) => {
   const isMatch = await user.matchPassword(password);
   if (!isMatch) {
     return res.status(401).json({ success: false, message: 'Invalid credentials' });
+  }
+
+  // Block login if email is not verified
+  if (!user.isVerified) {
+    return res.status(403).json({
+      success: false,
+      message: 'Please verify your email before logging in',
+      needsVerification: true,
+      email: user.email
+    });
   }
 
   sendTokenResponse(user, 200, res);
@@ -187,6 +225,15 @@ exports.updateProfile = asyncHandler(async (req, res) => {
 // @route   PUT /api/v1/auth/update-password
 exports.updatePassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body;
+
+  // Validate both fields are present
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ success: false, message: 'Please provide both current and new password' });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
+  }
   
   const user = await User.findById(req.user.id).select('+password');
   if (!user) return res.status(404).json({ success: false, message: 'User not found' });

@@ -10,7 +10,10 @@ exports.getWishlist = asyncHandler(async (req, res) => {
     populate: { path: 'farmerId', select: 'farmName slug' }
   });
 
-  res.json({ success: true, count: user.wishlist.length, data: user.wishlist });
+  // Filter out null entries (products that were deleted from DB)
+  const validWishlist = user.wishlist.filter(item => item !== null);
+
+  res.json({ success: true, count: validWishlist.length, data: validWishlist });
 });
 
 // @desc    Add to wishlist

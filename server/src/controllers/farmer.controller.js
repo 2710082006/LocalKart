@@ -55,7 +55,7 @@ exports.getFarmers = asyncHandler(async (req, res) => {
 
   // Nearby filter (uses customer location)
   if (req.query.lng && req.query.lat) {
-    query["location.coordinates"] = {
+    query.location = {
       $near: {
         $geometry: {
           type: "Point",
@@ -64,12 +64,29 @@ exports.getFarmers = asyncHandler(async (req, res) => {
             Number(req.query.lat),
           ],
         },
-        $maxDistance: 50000, // 50km
+        $maxDistance: 10000, // 10km radius
       },
     };
   }
 
-  const total = (await Farmer.find(query)).length;
+  // Count total matching documents
+  // Note: $near can't be used with countDocuments, so we use a separate count query
+  // with $geoWithin (which supports countDocuments) for an accurate count
+  let total;
+  if (query.location) {
+    const countQuery = { ...query };
+    countQuery.location = {
+      $geoWithin: {
+        $centerSphere: [
+          [Number(req.query.lng), Number(req.query.lat)],
+          10 / 6378.1 // 10km radius in radians (Earth radius = 6378.1 km)
+        ]
+      }
+    };
+    total = await Farmer.countDocuments(countQuery);
+  } else {
+    total = await Farmer.countDocuments(query);
+  }
 
   const farmers = await Farmer.find(query)
     .populate("userId", "name avatar phone")
@@ -416,10 +433,10 @@ exports.updatePaymentDetails = asyncHandler(async (req, res) => {
     ifscCode
   } = req.body;
 
-  farmer.bankDetails = {
+  farmer.paymentDetails = {
     upiId,
     bankName,
-    accountHolderName: accountHolder,
+    accountHolder,
     accountNumber,
     ifscCode
   };

@@ -13,7 +13,7 @@ const {
   updatePaymentDetails
 } = require('../controllers/farmer.controller');
 
-const { protect, authorize } = require('../middleware/auth');
+const { protect, authorize, optionalAuth, forbidRole } = require('../middleware/auth');
 const { validate, schemas } = require('../middleware/validate');
 
 
@@ -60,18 +60,18 @@ router.get(
 // =============================
 
 // Nearby farmers
-router.get('/nearby', getNearbyFarmers);
+router.get('/nearby', optionalAuth, forbidRole('farmer'), getNearbyFarmers);
 
 // Featured farmers
-router.get('/featured', getFeaturedFarmers);
+router.get('/featured', optionalAuth, forbidRole('farmer'), getFeaturedFarmers);
 
 // Get all farmers
-router.get('/', getFarmers);
+router.get('/', optionalAuth, forbidRole('farmer'), getFarmers);
 
 // IMPORTANT: specific route before generic route
-router.get('/:id/products', getFarmerProducts);
+router.get('/:id/products', optionalAuth, forbidRole('farmer'), getFarmerProducts);
 
 // Get single farmer (keep LAST)
-router.get('/:id', getFarmer);
+router.get('/:id', optionalAuth, forbidRole('farmer'), getFarmer);
 
 module.exports = router;
