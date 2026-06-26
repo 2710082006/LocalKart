@@ -15,19 +15,37 @@ exports.register = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: 'Email already registered' });
   }
 
-  const user = await User.create({ name, email, password, phone, role: role || 'customer' });
+  let user;
 
-  // Generate OTP for verification
-  const otp = user.generateOTP();
-  await user.save();
+  try {
+    // Create user
+    user = await User.create({
+      name,
+      email,
+      password,
+      phone,
+      role: role || "customer",
+    });
 
-  // Send OTP (simulated)
-  await sendEmail({
-    to: email,
-    subject: 'Farm2Door - Verify Your Email',
-    html: `<h2>Your OTP is: ${otp}</h2><p>Valid for 10 minutes.</p>`
-  });
+    // Generate OTP
+    const otp = user.generateOTP();
+    await user.save();
 
+    // Send OTP mail
+    await sendEmail({
+      to: email,
+      subject: "Farm2Door - Verify Your Email",
+      html: `<h2>Your OTP is: ${otp}</h2><p>Valid for 10 minutes.</p>`,
+    });
+
+  } catch (error) {
+    // If mail fails, delete user
+    if (user) {
+      await User.findByIdAndDelete(user._id);
+    }
+
+    throw new Error("Registration failed: " + error.message);
+  }
   // If farmer, create farmer profile (rollback user if this fails)
   if (role === 'farmer') {
     try {
@@ -53,11 +71,11 @@ exports.register = asyncHandler(async (req, res) => {
   }
 
   res.status(201).json({
-  success: true,
-  message: 'OTP sent to email. Please verify.',
-  userId: user._id,
-  email: user.email
-});
+    success: true,
+    message: 'OTP sent to email. Please verify.',
+    userId: user._id,
+    email: user.email
+  });
 });
 
 // @desc    Login user
@@ -234,16 +252,16 @@ exports.updatePassword = asyncHandler(async (req, res) => {
   if (newPassword.length < 6) {
     return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
   }
-  
+
   const user = await User.findById(req.user.id).select('+password');
   if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-  
+
   const isMatch = await user.matchPassword(currentPassword);
   if (!isMatch) return res.status(401).json({ success: false, message: 'Incorrect current password' });
-  
+
   user.password = newPassword;
   await user.save();
-  
+
   sendTokenResponse(user, 200, res);
 });
 
