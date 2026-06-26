@@ -40,11 +40,11 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://localhost:5174",
-      "https://localkart-jdussolha-divyam-portfolio.vercel.app"
+      "https://localkart-sepia.vercel.app"
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
 
@@ -54,9 +54,9 @@ app.options(
     origin: [
       "http://localhost:5173",
       "http://localhost:5174",
-      "https://localkart-jdussolha-divyam-portfolio.vercel.app"
+      "https://localkart-sepia.vercel.app"
     ],
-    credentials: true,
+    credentials: true
   })
 );
 /*
