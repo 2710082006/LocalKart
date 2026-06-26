@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please provide an email'],
     lowercase: true,
+    // Remeber yaha pe unique hoga testing ke liye hataya hai
     match: [
       /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
       "Please provide a valid email"
