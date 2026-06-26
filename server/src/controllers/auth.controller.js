@@ -52,18 +52,31 @@ exports.register = asyncHandler(async (req, res) => {
   }
   // If farmer, create farmer profile (rollback user if this fails)
   if (role === 'farmer') {
-    try {
-      await Farmer.create({
-        userId: user._id,
-        farmName: `${name}'s Farm`,
-        location: { type: 'Point', coordinates: [77.5946, 12.9716] } // Default Bangalore
-      });
-    } catch (profileError) {
-      await User.findByIdAndDelete(user._id);
-      return res.status(500).json({ success: false, message: 'Failed to create farmer profile. Please try again.' });
-    }
-  }
+  try {
+    console.log("STEP 3: entering farmer creation");
 
+    const farmer = await Farmer.create({
+      userId: user._id,
+      farmName: `${name}'s Farm`,
+      location: {
+        type: 'Point',
+        coordinates: [77.5946, 12.9716]
+      }
+    });
+
+    console.log("STEP 4: farmer created:", farmer);
+
+  } catch (profileError) {
+    console.error("FARMER CREATE ERROR:", profileError);
+
+    await User.findByIdAndDelete(user._id);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to create farmer profile. Please try again.'
+    });
+  }
+}
   // If delivery agent, create profile (rollback user if this fails)
   if (role === 'delivery') {
     try {
