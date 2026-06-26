@@ -27,9 +27,9 @@ export const login = createAsyncThunk(
 
       return data;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data || { message: "Login failed" }
-      );
+     return rejectWithValue(
+  error.response?.data?.message || "Login failed"
+);
     }
   }
 );
