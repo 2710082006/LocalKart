@@ -42,39 +42,40 @@ export default function CheckoutPage() {
         }))
       };
       if (paymentMethod === 'online') {
-        // Step 1: Create actual order in DB first
-        const { data: order } = await orderAPI.create(orderData);
+  // Step 1: Create Razorpay order first (NO DB ORDER YET)
+  const { data: paymentOrder } = await paymentAPI.createOrder({
+    amount: total
+  });
 
-        // Step 2: Create Razorpay order from backend
-        const { data: paymentOrder } = await paymentAPI.createOrder({
-          orderId: order.data._id
-        });
+  const options = {
+    key: paymentOrder.data.key,
+    amount: paymentOrder.data.amount,
+    currency: paymentOrder.data.currency,
+    order_id: paymentOrder.data.orderId,
 
-        const options = {
-          key: paymentOrder.data.key,
-          amount: paymentOrder.data.amount,
-          currency: paymentOrder.data.currency,
-          order_id: paymentOrder.data.orderId,
+    name: "Farm2Door",
+    description: "Farm Fresh Order",
 
-          name: "Farm2Door",
-          description: "Farm Fresh Order",
+    handler: async function (response) {
+      // Step 2: Verify payment and create order after success
+      const { data: verifiedOrder } = await paymentAPI.verify({
+        ...response,
+        orderData
+      });
 
-          handler: async function (response) {
-            await paymentAPI.verify(response);
+      toast.success("Payment successful!");
+      dispatch(resetCart());
+      navigate(`/orders/${verifiedOrder.data._id}`);
+    },
 
-            toast.success("Payment successful!");
-            dispatch(resetCart());
-            navigate(`/orders/${order.data._id}`);
-          },
+    theme: {
+      color: "#0EA5E9"
+    }
+  };
 
-          theme: {
-            color: "#0EA5E9"
-          }
-        };
-
-        const razorpay = new window.Razorpay(options);
-        razorpay.open();
-      } else {
+  const razorpay = new window.Razorpay(options);
+  razorpay.open();
+} else {
         const { data: order } = await orderAPI.create(orderData);
         dispatch(resetCart());
         toast.success('Order placed successfully!');
