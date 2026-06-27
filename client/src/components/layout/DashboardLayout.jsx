@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Package, ShoppingBag, BarChart3, User, Truck,
   Clock, Users, Shield, AlertTriangle, Star, LogOut, Menu, X,
-  ChevronLeft, Bell, Leaf, Settings, MapPin,  DollarSign,
+  ChevronLeft, Bell, Leaf, Settings, MapPin, DollarSign,
   MessageSquare
 } from 'lucide-react';
 import { logout } from '../../features/authSlice';
@@ -33,6 +33,7 @@ const sidebarConfig = {
     { label: 'Assigned Orders', path: '/delivery/assigned', icon: Truck },
     { label: 'Earnings', path: '/delivery/earnings', icon: DollarSign },
     { label: 'History', path: '/delivery/history', icon: Clock },
+    { label: 'Profile', path: '/delivery/profile', icon: User },
   ],
   admin: [
     { label: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
@@ -94,11 +95,10 @@ export default function DashboardLayout({ role }) {
               <Link
                 key={link.path}
                 to={link.path}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                  isActive
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${isActive
                     ? 'bg-sky-50 text-sky-700 shadow-sm'
                     : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900'
-                } ${collapsed ? 'justify-center' : ''}`}
+                  } ${collapsed ? 'justify-center' : ''}`}
                 title={collapsed ? link.label : ''}
               >
                 <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-sky-600' : ''}`} />
@@ -159,9 +159,8 @@ export default function DashboardLayout({ role }) {
                     key={link.path}
                     to={link.path}
                     onClick={() => setMobileOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                      isActive ? 'bg-sky-50 text-sky-700' : 'text-neutral-600 hover:bg-neutral-50'
-                    }`}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${isActive ? 'bg-sky-50 text-sky-700' : 'text-neutral-600 hover:bg-neutral-50'
+                      }`}
                   >
                     <Icon className="w-5 h-5" />
                     {link.label}
